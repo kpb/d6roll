@@ -26,7 +26,8 @@ access. Set `VERSION` and `INSTALL_DIR` on the right of the pipe to override
 either default:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh | VERSION=v0.1.0 INSTALL_DIR="$HOME/bin" sh
+curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh |
+  VERSION=v0.1.0 INSTALL_DIR="$HOME/bin" sh
 ```
 
 Add the installation directory to your `PATH` if needed (use `$HOME/bin` instead
