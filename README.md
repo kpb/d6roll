@@ -9,7 +9,7 @@ Photo by [Alois Komenda](https://unsplash.com/@aloisk?utm_source=unsplash&utm_me
 [![Tests][tests-badge]][tests-workflow]
 [![Go version][go-badge]][go-mod]
 
-d6roll is a small Go library and command-line utility for generating Diceware passphrases from the [EFF long wordlist](https://www.eff.org/dice). It has no third-party dependencies or runtime wordlist file.
+d6roll is a small command-line utility for generating Diceware passphrases from the [EFF long wordlist](https://www.eff.org/dice). It has no third-party dependencies or runtime wordlist file. Using it from Go? See the [library guide](doc/library.md).
 
 ## Install and use
 
@@ -61,29 +61,11 @@ d6roll --rolls               # roll table and metadata on stderr
 d6roll --help
 ```
 
-The CLI accepts 3–32 words; the library accepts 1–1,024 words, rejecting larger counts before allocation. `--verbose` reports word count, entropy, a descriptive strength label, and wordlist name. `--rolls` also reports the five-digit roll for each word. Redirecting stdout (for example, `d6roll --verbose > passphrase.txt`) captures only the passphrase. Errors go to stderr and exit nonzero.
+The CLI accepts 3–32 words. `--verbose` reports word count, entropy, a descriptive strength label, and wordlist name. `--rolls` also reports the five-digit roll for each word. Redirecting stdout (for example, `d6roll --verbose > passphrase.txt`) captures only the passphrase. Errors go to stderr and exit nonzero.
 
-## Library
+## Diceware and security
 
-```go
-phrase, err := d6roll.Generate(6) // secure default source
-if err != nil {
-    return err
-}
-words := phrase.Words()             // []string, separate from the selections
-bits := phrase.EntropyBits
-roll := phrase.Selections[0].Roll
-_, _ = words, bits
-_ = roll
-```
-
-For just the words, use `d6roll.GenerateWords(6)`. For deterministic tests, use `d6roll.NewGenerator(reader)`, then `generator.Generate(6)` or `generator.GenerateWords(6)`. In production, an injected `io.Reader` **must** provide cryptographically secure randomness; the defaults use `crypto/rand.Reader`. Invalid counts, nil sources, and random-source failures return errors, never successful partial results.
-
-## Wordlist, rolls, and entropy
-
-The bundled [EFF long Diceware wordlist](https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt) contains 7,776 distinct words with their original five-die roll identifiers. Credit: Electronic Frontier Foundation. The embedded source file's SHA-256 is `addd35536511597a02fa0a9ff1e5284677b8883b83e986e43f15a3db996b903e`. The program validates the embedded list's size, unique words and rolls, and roll syntax at startup. A roll identifies the selected word; it is **not** additional randomness or entropy. Future lists could have no rolls, represented by an empty `Selection.Roll`; custom list loading is not supported in v0.1.
-
-For `N` independently selected words from `W` unique entries, entropy is `N × log2(W)` bits. With the EFF list, that is about 12.925 bits per word, or 77.5 bits for six words. This estimate assumes a secure source and unbiased, independent selection with replacement; repeated words are valid. The CLI's display labels are *Low* (<40 bits), *Moderate* (40–<60), *Strong* (60–<75), and *Very strong* (≥75). They are descriptive buckets, not universal security guarantees; the numerical entropy is authoritative.
+The bundled [EFF long Diceware wordlist](https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt) has 7,776 words with five-digit roll identifiers. Credit: Electronic Frontier Foundation. Each displayed roll identifies its word; it adds no entropy. Six independently selected words have about 77.5 bits of entropy, assuming uniform selection with a secure random source. The CLI's labels are *Low* (<40 bits), *Moderate* (40–<60), *Strong* (60–<75), and *Very strong* (≥75). These are descriptive buckets, not security guarantees; the numeric estimate is authoritative. See the [library guide](doc/library.md) for the calculation and metadata details.
 
 Treat passphrases and displayed rolls as secrets. Output in a terminal may remain in scrollback or captured logs; redirect deliberately. d6roll does not save or transmit passphrases. Architectural rationale is in [doc/adr/](doc/adr/). The repository license is [GPL-3.0](LICENSE).
 
