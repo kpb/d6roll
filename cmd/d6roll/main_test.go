@@ -1,0 +1,130 @@
+package main
+
+import (
+	"bytes"
+	"errors"
+	"math"
+	"strings"
+	"testing"
+
+	"github.com/kpb/d6roll"
+)
+
+var sample = []d6roll.Selection{
+	{Word: "abacus", Roll: "11111"}, {Word: "abdomen", Roll: "11112"},
+	{Word: "abdominal", Roll: "11113"}, {Word: "abide", Roll: "11114"},
+	{Word: "abiding", Roll: "11115"}, {Word: "ability", Roll: "11116"},
+}
+
+func fakeGenerate(n int) (d6roll.Passphrase, error) {
+	return d6roll.Passphrase{
+		Selections: sample[:n], EntropyBits: float64(n) * math.Log2(7776), Wordlist: "eff-large",
+	}, nil
+}
+
+func output(args []string, generate func(int) (d6roll.Passphrase, error)) (int, string, string) {
+	var stdout, stderr bytes.Buffer
+	status := run(args, &stdout, &stderr, generate)
+	return status, stdout.String(), stderr.String()
+}
+
+func TestDefaultOutput(t *testing.T) {
+	status, stdout, stderr := output(nil, fakeGenerate)
+	if status != 0 || stdout != "abacus-abdomen-abdominal-abide-abiding-ability\n" || stderr != "" {
+		t.Fatalf("status=%d stdout=%q stderr=%q", status, stdout, stderr)
+	}
+}
+
+func TestFlagAliasesAndSeparators(t *testing.T) {
+	for _, args := range [][]string{
+		{"-w", "3", "-s", " "}, {"--words=3", "--separator= "},
+	} {
+		status, stdout, stderr := output(args, fakeGenerate)
+		if status != 0 || stdout != "abacus abdomen abdominal\n" || stderr != "" {
+			t.Fatalf("args=%q status=%d stdout=%q stderr=%q", args, status, stdout, stderr)
+		}
+	}
+}
+
+func TestMaximumCLIWordCount(t *testing.T) {
+	status, stdout, stderr := output([]string{"-w=32"}, func(n int) (d6roll.Passphrase, error) {
+		if n != 32 {
+			t.Fatalf("count = %d", n)
+		}
+		selections := make([]d6roll.Selection, n)
+		for i := range selections {
+			selections[i].Word = "abacus"
+		}
+		return d6roll.Passphrase{Selections: selections}, nil
+	})
+	if status != 0 || len(strings.Split(strings.TrimSpace(stdout), "-")) != 32 || stderr != "" {
+		t.Fatalf("status=%d stdout=%q stderr=%q", status, stdout, stderr)
+	}
+}
+
+func TestVerboseAndRollsAreOnlyOnStderr(t *testing.T) {
+	for _, args := range [][]string{{"-v"}, {"--verbose"}, {"--rolls"}} {
+		status, stdout, stderr := output(args, fakeGenerate)
+		if status != 0 || stdout != "abacus-abdomen-abdominal-abide-abiding-ability\n" {
+			t.Fatalf("args=%q status=%d stdout=%q", args, status, stdout)
+		}
+		for _, want := range []string{"Words:     6", "Entropy:   77.5 bits", "Strength:  Very strong", "Wordlist:  eff-large"} {
+			if !strings.Contains(stderr, want) {
+				t.Fatalf("args=%q stderr missing %q: %q", args, want, stderr)
+			}
+		}
+		if args[0] == "--rolls" {
+			if !strings.Contains(stderr, "Roll     Word") || !strings.Contains(stderr, "11112    abdomen") {
+				t.Fatalf("roll table missing: %q", stderr)
+			}
+		} else if strings.Contains(stderr, "11112") {
+			t.Fatalf("verbose showed rolls: %q", stderr)
+		}
+	}
+}
+
+func TestHelpAndVersion(t *testing.T) {
+	for _, flag := range []string{"-h", "--help"} {
+		status, stdout, stderr := output([]string{flag}, nil)
+		if status != 0 || stdout != "" || !strings.Contains(stderr, "Usage: d6roll") {
+			t.Fatalf("help: status=%d stdout=%q stderr=%q", status, stdout, stderr)
+		}
+	}
+	for _, flag := range []string{"-V", "--version"} {
+		status, stdout, stderr := output([]string{flag}, nil)
+		if status != 0 || stdout != "d6roll 0.1.0\n" || stderr != "" {
+			t.Fatalf("version: status=%d stdout=%q stderr=%q", status, stdout, stderr)
+		}
+	}
+}
+
+func TestInvalidArgsAndGenerationFailure(t *testing.T) {
+	for _, args := range [][]string{
+		{"--words=2"}, {"-w", "33"}, {"--words=oops"}, {"extra"}, {"-w", "3", "extra"}, {"--unknown"},
+	} {
+		status, stdout, stderr := output(args, func(int) (d6roll.Passphrase, error) {
+			t.Fatal("invalid args invoked generator")
+			return d6roll.Passphrase{}, nil
+		})
+		if status == 0 || stdout != "" || stderr == "" {
+			t.Fatalf("args=%q status=%d stdout=%q stderr=%q", args, status, stdout, stderr)
+		}
+	}
+	status, stdout, stderr := output(nil, func(int) (d6roll.Passphrase, error) {
+		return d6roll.Passphrase{}, errors.New("source failed")
+	})
+	if status == 0 || stdout != "" || !strings.Contains(stderr, "source failed") {
+		t.Fatalf("failure: status=%d stdout=%q stderr=%q", status, stdout, stderr)
+	}
+}
+
+func TestStrengthBuckets(t *testing.T) {
+	for _, tc := range []struct {
+		bits float64
+		want string
+	}{{39, "Low"}, {40, "Moderate"}, {60, "Strong"}, {75, "Very strong"}} {
+		if got := strength(tc.bits); got != tc.want {
+			t.Errorf("strength(%v) = %q, want %q", tc.bits, got, tc.want)
+		}
+	}
+}
