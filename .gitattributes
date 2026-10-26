@@ -1,0 +1,2 @@
+# Preserve the official EFF source bytes, including its LF line endings.
+wordlists/eff_large.txt text eol=lf
