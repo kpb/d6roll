@@ -1,6 +1,7 @@
 # d6roll
 
 [![License][license-badge]][license]
+[![Latest release][release-badge]][latest-release]
 [![Tests][tests-badge]][tests-workflow]
 [![Go version][go-badge]][go-mod]
 
@@ -8,7 +9,12 @@ d6roll is a small Go library and command-line utility for generating Diceware pa
 
 ## Build and use
 
-Requires Go 1.22 or later.
+Building from source requires Go 1.22 or later.
+
+Prebuilt archives for Linux (amd64), macOS (amd64 and arm64), and Windows (amd64)
+are available on the [latest release][latest-release] page. Download the archive
+for your platform, verify it against `checksums.txt`, extract it, and put the
+binary on your `PATH`. Alternatively, install with Go:
 
 ```sh
 go install github.com/kpb/d6roll/cmd/d6roll@latest
@@ -50,7 +56,9 @@ Treat passphrases and displayed rolls as secrets. Output in a terminal may remai
 
 [go-badge]: https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go
 [go-mod]: go.mod
+[latest-release]: https://github.com/kpb/d6roll/releases/latest
 [license-badge]: https://img.shields.io/github/license/kpb/d6roll
 [license]: LICENSE
+[release-badge]: https://img.shields.io/github/v/release/kpb/d6roll
 [tests-badge]: https://github.com/kpb/d6roll/actions/workflows/test.yml/badge.svg
 [tests-workflow]: https://github.com/kpb/d6roll/actions/workflows/test.yml
