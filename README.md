@@ -14,25 +14,31 @@ d6roll is a small Go library and command-line utility for generating Diceware pa
 ## Install and use
 
 On Linux (amd64) or macOS (amd64 or arm64), inspect [install.sh](install.sh)
-before running the installer:
+before running the installer. This command only executes the downloaded script
+if the download succeeds:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh | sh
+(
+  installer=$(mktemp) || exit 1
+  trap 'rm -f "$installer"' 0
+  curl -fsSL -o "$installer" https://raw.githubusercontent.com/kpb/d6roll/main/install.sh &&
+    sh "$installer"
+)
 ```
 
 The installer downloads the latest release to `~/.local/bin` by default, verifies
 the archive against the release's SHA-256 `checksums.txt`, and requires no root
-access. Set `VERSION=v0.1.0` or `INSTALL_DIR=/your/bin` on the **right** of the
-pipe to override either default, for example:
+access. Set `VERSION=v0.1.0` or `INSTALL_DIR=/your/bin` before `sh "$installer"`
+on the last line to override either default. Add `~/.local/bin` to your `PATH`
+if needed:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh | VERSION=v0.1.0 sh
-export PATH="$HOME/.local/bin:$PATH" # if not already on your PATH
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 Checksums downloaded from the same release detect corruption, but do not
-independently authenticate the publisher. Review any script before piping it
-to `sh`. The installer does not support Windows or Linux arm64.
+independently authenticate the publisher. Review the script before running it.
+The installer does not support Windows or Linux arm64.
 
 Prebuilt archives for Linux (amd64), macOS (amd64 and arm64), and Windows (amd64)
 are available on the [latest release][latest-release] page. Download the archive
@@ -52,7 +58,7 @@ d6roll --rolls               # roll table and metadata on stderr
 d6roll --help
 ```
 
-The CLI accepts 3–32 words; the library accepts any positive word count subject to available resources. `--verbose` reports word count, entropy, a descriptive strength label, and wordlist name. `--rolls` also reports the five-digit roll for each word. Redirecting stdout (for example, `d6roll --verbose > passphrase.txt`) captures only the passphrase. Errors go to stderr and exit nonzero.
+The CLI accepts 3–32 words; the library accepts 1–1,024 words, rejecting larger counts before allocation. `--verbose` reports word count, entropy, a descriptive strength label, and wordlist name. `--rolls` also reports the five-digit roll for each word. Redirecting stdout (for example, `d6roll --verbose > passphrase.txt`) captures only the passphrase. Errors go to stderr and exit nonzero.
 
 ## Library
 

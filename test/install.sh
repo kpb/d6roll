@@ -30,12 +30,20 @@ output=
 url=
 while [ "$#" -gt 0 ]; do
 	case "$1" in
-		--output | --write-out) output=$2; shift 2 ;;
+		-o | --output) output=$2; shift 2 ;;
+		--write-out) shift 2 ;;
 		--fail | --location | --silent | --show-error) shift ;;
 		*) url=$1; shift ;;
 	esac
 done
 case "$url" in
+	"https://raw.githubusercontent.com/kpb/d6roll/main/install.sh")
+		if [ "${TEST_FAIL_SCRIPT:-}" = 1 ]; then
+			printf '%s\n' 'touch "$TEST_PARTIAL_MARKER"' > "$output"
+			exit 22
+		fi
+		cp "$TEST_PROJECT_DIR/install.sh" "$output"
+		;;
 	"https://github.com/kpb/d6roll/releases/latest")
 		printf '%s' 'https://github.com/kpb/d6roll/releases/tag/v0.1.0'
 		;;
@@ -60,7 +68,8 @@ EOF
 chmod +x "$test_dir/mock-bin/curl" "$test_dir/mock-bin/uname"
 PATH="$test_dir/mock-bin:$PATH"
 TEST_FIXTURES="$test_dir/fixtures"
-export PATH TEST_FIXTURES
+TEST_PROJECT_DIR=$project_dir
+export PATH TEST_FIXTURES TEST_PROJECT_DIR
 
 fail() {
 	printf 'installer test: %s\n' "$*" >&2
@@ -83,6 +92,23 @@ expect_failure() {
 	fi
 	[ ! -e "$install_dir/d6roll" ] || fail "$label: installed binary on failure"
 }
+
+# Mirror the README's download-then-execute command, including its exit status.
+download_and_install() (
+	installer=$(mktemp) || exit 1
+	trap 'rm -f "$installer"' 0
+	curl -fsSL -o "$installer" https://raw.githubusercontent.com/kpb/d6roll/main/install.sh &&
+		sh "$installer"
+)
+
+TEST_OS=Linux TEST_ARCH=amd64 HOME="$test_dir/documented-home" download_and_install > "$test_dir/stdout"
+expect_binary documented-command "$test_dir/documented-home/.local/bin" linux_amd64
+
+TEST_PARTIAL_MARKER="$test_dir/partial-executed"
+if TEST_FAIL_SCRIPT=1 TEST_PARTIAL_MARKER="$TEST_PARTIAL_MARKER" download_and_install > "$test_dir/stdout" 2> "$test_dir/stderr"; then
+	fail 'documented command succeeded after curl failed'
+fi
+[ ! -e "$TEST_PARTIAL_MARKER" ] || fail 'executed a partial download'
 
 TEST_OS=Linux TEST_ARCH=x86_64 HOME="$test_dir/home" sh "$project_dir/install.sh" > "$test_dir/stdout"
 expect_binary latest "$test_dir/home/.local/bin" linux_amd64

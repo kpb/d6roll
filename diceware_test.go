@@ -100,12 +100,18 @@ func TestGenerateWordsAndValidation(t *testing.T) {
 	if _, err := NewGenerator(nil); err == nil {
 		t.Fatal("accepted nil reader")
 	}
-	for _, count := range []int{-1, 0} {
+	for _, count := range []int{-1, 0, maxWords + 1, math.MaxInt} {
 		if _, err := g.Generate(count); err == nil {
 			t.Fatalf("accepted count %d", count)
 		}
+		if _, err := Generate(count); err == nil {
+			t.Fatalf("Generate accepted count %d", count)
+		}
 		if _, err := GenerateWords(count); err == nil {
 			t.Fatalf("GenerateWords accepted count %d", count)
+		}
+		if _, err := g.GenerateWords(count); err == nil {
+			t.Fatalf("generator.GenerateWords accepted count %d", count)
 		}
 	}
 	if _, err := (&Generator{}).Generate(1); err == nil {
@@ -122,9 +128,34 @@ func TestGenerateWordsAndValidation(t *testing.T) {
 	}
 }
 
+func TestLibraryMaximumWordCount(t *testing.T) {
+	g, err := NewGenerator(bytes.NewReader(make([]byte, maxWords*2)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, err := g.Generate(maxWords)
+	if err != nil || len(p.Selections) != maxWords {
+		t.Fatalf("Generate(%d) returned %d selections, %v", maxWords, len(p.Selections), err)
+	}
+}
+
 type failedReader struct{ err error }
 
 func (r failedReader) Read([]byte) (int, error) { return 0, r.err }
+
+type panicReader struct{}
+
+func (panicReader) Read([]byte) (int, error) { panic("invalid count consumed randomness") }
+
+func TestOversizedCountDoesNotReadRandomness(t *testing.T) {
+	g, err := NewGenerator(panicReader{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := g.Generate(maxWords + 1); err == nil {
+		t.Fatal("accepted oversized count")
+	}
+}
 
 func TestRandomFailureReturnsNoPhrase(t *testing.T) {
 	wantErr := errors.New("source failed")

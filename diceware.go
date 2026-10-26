@@ -10,6 +10,8 @@ import (
 	"math/big"
 )
 
+const maxWords = 1024
+
 // Selection records a chosen word and its Diceware roll. Roll is empty if
 // the wordlist does not provide roll notation; a roll adds no entropy.
 type Selection struct {
@@ -50,12 +52,12 @@ func NewGenerator(random io.Reader) (*Generator, error) {
 	return &Generator{random: random, list: &effLarge}, nil
 }
 
-// Generate selects n words using crypto/rand.Reader. n must be positive.
+// Generate selects n words using crypto/rand.Reader. n must be between 1 and 1024.
 func Generate(n int) (Passphrase, error) {
 	return (&Generator{random: rand.Reader, list: &effLarge}).Generate(n)
 }
 
-// GenerateWords selects n words using crypto/rand.Reader.
+// GenerateWords selects n words using crypto/rand.Reader. n must be between 1 and 1024.
 func GenerateWords(n int) ([]string, error) {
 	phrase, err := Generate(n)
 	if err != nil {
@@ -65,10 +67,10 @@ func GenerateWords(n int) ([]string, error) {
 }
 
 // Generate selects n words independently, with replacement. It returns no
-// partial passphrase on failure. n must be positive.
+// partial passphrase on failure. n must be between 1 and 1024.
 func (g *Generator) Generate(n int) (Passphrase, error) {
-	if n <= 0 {
-		return Passphrase{}, fmt.Errorf("d6roll: word count must be positive")
+	if n < 1 || n > maxWords {
+		return Passphrase{}, fmt.Errorf("d6roll: word count must be between 1 and %d", maxWords)
 	}
 	if g == nil || g.random == nil || g.list == nil {
 		return Passphrase{}, fmt.Errorf("d6roll: uninitialized generator")
@@ -92,6 +94,7 @@ func (g *Generator) Generate(n int) (Passphrase, error) {
 }
 
 // GenerateWords selects n words with the generator's random source.
+// n must be between 1 and 1024.
 func (g *Generator) GenerateWords(n int) ([]string, error) {
 	phrase, err := g.Generate(n)
 	if err != nil {
