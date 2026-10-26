@@ -84,6 +84,10 @@ func TestVerboseAndRollsAreOnlyOnStderr(t *testing.T) {
 }
 
 func TestHelpAndVersion(t *testing.T) {
+	status, stdout, stderr := output([]string{"help"}, nil)
+	if status != 0 || stderr != "" || !strings.Contains(stdout, "Usage: d6roll") || !strings.Contains(stdout, "d6roll help") || !strings.Contains(stdout, "-words") {
+		t.Fatalf("help command: status=%d stdout=%q stderr=%q", status, stdout, stderr)
+	}
 	for _, flag := range []string{"-h", "--help"} {
 		status, stdout, stderr := output([]string{flag}, nil)
 		if status != 0 || stdout != "" || !strings.Contains(stderr, "Usage: d6roll") {
@@ -100,7 +104,7 @@ func TestHelpAndVersion(t *testing.T) {
 
 func TestInvalidArgsAndGenerationFailure(t *testing.T) {
 	for _, args := range [][]string{
-		{"--words=2"}, {"-w", "33"}, {"--words=oops"}, {"extra"}, {"-w", "3", "extra"}, {"--unknown"},
+		{"--words=2"}, {"-w", "33"}, {"--words=oops"}, {"extra"}, {"help", "extra"}, {"-w", "3", "help"}, {"-w", "3", "extra"}, {"--unknown"},
 	} {
 		status, stdout, stderr := output(args, func(int) (d6roll.Passphrase, error) {
 			t.Fatal("invalid args invoked generator")

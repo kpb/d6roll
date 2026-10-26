@@ -58,6 +58,7 @@ d6roll                       # six words, hyphen-separated; stdout only
 d6roll -w 8 -s ' '          # eight space-separated words
 d6roll --verbose             # passphrase on stdout, metadata on stderr
 d6roll --rolls               # roll table and metadata on stderr
+d6roll help                  # usage on stdout
 d6roll --help
 ```
 

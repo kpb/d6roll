@@ -34,8 +34,14 @@ func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Pas
 	flags.BoolVar(&showVersion, "V", false, "show version")
 	flags.BoolVar(&showVersion, "version", false, "show version")
 	flags.Usage = func() {
-		fmt.Fprintln(stderr, "Usage: d6roll [flags]")
+		fmt.Fprintln(flags.Output(), "Usage: d6roll [flags]")
+		fmt.Fprintln(flags.Output(), "       d6roll help")
 		flags.PrintDefaults()
+	}
+	if len(args) == 1 && args[0] == "help" {
+		flags.SetOutput(stdout)
+		flags.Usage()
+		return 0
 	}
 	if err := flags.Parse(args); err != nil {
 		return 2
