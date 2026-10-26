@@ -1,5 +1,9 @@
 # d6roll
 
+[![License][license-badge]][license]
+[![Tests][tests-badge]][tests-workflow]
+[![Go version][go-badge]][go-mod]
+
 d6roll is a small Go library and command-line utility for generating Diceware passphrases from the [EFF long wordlist](https://www.eff.org/dice). It has no third-party dependencies or runtime wordlist file.
 
 ## Build and use
@@ -43,3 +47,10 @@ The bundled [EFF long Diceware wordlist](https://www.eff.org/files/2016/07/18/ef
 For `N` independently selected words from `W` unique entries, entropy is `N × log2(W)` bits. With the EFF list, that is about 12.925 bits per word, or 77.5 bits for six words. This estimate assumes a secure source and unbiased, independent selection with replacement; repeated words are valid. The CLI's display labels are *Low* (<40 bits), *Moderate* (40–<60), *Strong* (60–<75), and *Very strong* (≥75). They are descriptive buckets, not universal security guarantees; the numerical entropy is authoritative.
 
 Treat passphrases and displayed rolls as secrets. Output in a terminal may remain in scrollback or captured logs; redirect deliberately. d6roll does not save or transmit passphrases. Architectural rationale is in [doc/adr/](doc/adr/). The repository license is [GPL-3.0](LICENSE).
+
+[go-badge]: https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go
+[go-mod]: go.mod
+[license-badge]: https://img.shields.io/github/license/kpb/d6roll
+[license]: LICENSE
+[tests-badge]: https://github.com/kpb/d6roll/actions/workflows/test.yml/badge.svg
+[tests-workflow]: https://github.com/kpb/d6roll/actions/workflows/test.yml
