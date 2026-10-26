@@ -11,14 +11,34 @@ Photo by [Alois Komenda](https://unsplash.com/@aloisk?utm_source=unsplash&utm_me
 
 d6roll is a small Go library and command-line utility for generating Diceware passphrases from the [EFF long wordlist](https://www.eff.org/dice). It has no third-party dependencies or runtime wordlist file.
 
-## Build and use
+## Install and use
 
-Building from source requires Go 1.22 or later.
+On Linux (amd64) or macOS (amd64 or arm64), inspect [install.sh](install.sh)
+before running the installer:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh | sh
+```
+
+The installer downloads the latest release to `~/.local/bin` by default, verifies
+the archive against the release's SHA-256 `checksums.txt`, and requires no root
+access. Set `VERSION=v0.1.0` or `INSTALL_DIR=/your/bin` on the **right** of the
+pipe to override either default, for example:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh | VERSION=v0.1.0 sh
+export PATH="$HOME/.local/bin:$PATH" # if not already on your PATH
+```
+
+Checksums downloaded from the same release detect corruption, but do not
+independently authenticate the publisher. Review any script before piping it
+to `sh`. The installer does not support Windows or Linux arm64.
 
 Prebuilt archives for Linux (amd64), macOS (amd64 and arm64), and Windows (amd64)
 are available on the [latest release][latest-release] page. Download the archive
 for your platform, verify it against `checksums.txt`, extract it, and put the
-binary on your `PATH`. Alternatively, install with Go:
+binary on your `PATH`. On Windows, use the ZIP archive instead of the shell
+installer. Alternatively, install with Go (Go 1.22 or later):
 
 ```sh
 go install github.com/kpb/d6roll/cmd/d6roll@latest
