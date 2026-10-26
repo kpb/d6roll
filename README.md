@@ -1,3 +1,7 @@
+<img src="image/alois-komenda-hAdfTKFXmwM-unsplash.jpg" alt="Three white dice on a dark surface" width="720">
+
+Photo by [Alois Komenda](https://unsplash.com/@aloisk?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/photos/3-white-dice-on-black-surface-hAdfTKFXmwM?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText).
+
 # d6roll
 
 [![License][license-badge]][license]
