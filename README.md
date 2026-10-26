@@ -58,6 +58,8 @@ For `N` independently selected words from `W` unique entries, entropy is `N × l
 
 Treat passphrases and displayed rolls as secrets. Output in a terminal may remain in scrollback or captured logs; redirect deliberately. d6roll does not save or transmit passphrases. Architectural rationale is in [doc/adr/](doc/adr/). The repository license is [GPL-3.0](LICENSE).
 
+Made with ❤️ by [me](mailto:hello@kennethbowen.com). Leave questions, comments, or suggestions as [GitHub issues](https://github.com/kpb/d6roll/issues) or send me an email.
+
 [go-badge]: https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go
 [go-mod]: go.mod
 [latest-release]: https://github.com/kpb/d6roll/releases/latest
