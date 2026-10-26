@@ -14,23 +14,23 @@ d6roll is a small Go library and command-line utility for generating Diceware pa
 ## Install and use
 
 On Linux (amd64) or macOS (amd64 or arm64), inspect [install.sh](install.sh)
-before running the installer. This command only executes the downloaded script
-if the download succeeds:
+before running the installer:
 
 ```sh
-(
-  installer=$(mktemp) || exit 1
-  trap 'rm -f "$installer"' 0
-  curl -fsSL -o "$installer" https://raw.githubusercontent.com/kpb/d6roll/main/install.sh &&
-    sh "$installer"
-)
+curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh | sh
 ```
 
 The installer downloads the latest release to `~/.local/bin` by default, verifies
 the archive against the release's SHA-256 `checksums.txt`, and requires no root
-access. Set `VERSION=v0.1.0` or `INSTALL_DIR=/your/bin` before `sh "$installer"`
-on the last line to override either default. Add `~/.local/bin` to your `PATH`
-if needed:
+access. Set `VERSION` and `INSTALL_DIR` on the right of the pipe to override
+either default:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh | VERSION=v0.1.0 INSTALL_DIR="$HOME/bin" sh
+```
+
+Add the installation directory to your `PATH` if needed (use `$HOME/bin` instead
+when following the override example):
 
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
@@ -38,6 +38,8 @@ export PATH="$HOME/.local/bin:$PATH"
 
 Checksums downloaded from the same release detect corruption, but do not
 independently authenticate the publisher. Review the script before running it.
+In a `curl | sh` pipeline, curl failure can be masked (or a partial script may
+execute); download the script separately when a reliable exit status matters.
 The installer does not support Windows or Linux arm64.
 
 Prebuilt archives for Linux (amd64), macOS (amd64 and arm64), and Windows (amd64)

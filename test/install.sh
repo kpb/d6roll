@@ -38,11 +38,11 @@ while [ "$#" -gt 0 ]; do
 done
 case "$url" in
 	"https://raw.githubusercontent.com/kpb/d6roll/main/install.sh")
-		if [ "${TEST_FAIL_SCRIPT:-}" = 1 ]; then
-			printf '%s\n' 'touch "$TEST_PARTIAL_MARKER"' > "$output"
-			exit 22
+		if [ -n "$output" ]; then
+			cp "$TEST_PROJECT_DIR/install.sh" "$output"
+		else
+			cat "$TEST_PROJECT_DIR/install.sh"
 		fi
-		cp "$TEST_PROJECT_DIR/install.sh" "$output"
 		;;
 	"https://github.com/kpb/d6roll/releases/latest")
 		printf '%s' 'https://github.com/kpb/d6roll/releases/tag/v0.1.0'
@@ -93,22 +93,14 @@ expect_failure() {
 	[ ! -e "$install_dir/d6roll" ] || fail "$label: installed binary on failure"
 }
 
-# Mirror the README's download-then-execute command, including its exit status.
-download_and_install() (
-	installer=$(mktemp) || exit 1
-	trap 'rm -f "$installer"' 0
-	curl -fsSL -o "$installer" https://raw.githubusercontent.com/kpb/d6roll/main/install.sh &&
-		sh "$installer"
-)
-
-TEST_OS=Linux TEST_ARCH=amd64 HOME="$test_dir/documented-home" download_and_install > "$test_dir/stdout"
+# Exercise both documented curl | sh invocations with an offline curl stub.
+curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh |
+	TEST_OS=Linux TEST_ARCH=amd64 HOME="$test_dir/documented-home" sh > "$test_dir/stdout"
 expect_binary documented-command "$test_dir/documented-home/.local/bin" linux_amd64
 
-TEST_PARTIAL_MARKER="$test_dir/partial-executed"
-if TEST_FAIL_SCRIPT=1 TEST_PARTIAL_MARKER="$TEST_PARTIAL_MARKER" download_and_install > "$test_dir/stdout" 2> "$test_dir/stderr"; then
-	fail 'documented command succeeded after curl failed'
-fi
-[ ! -e "$TEST_PARTIAL_MARKER" ] || fail 'executed a partial download'
+curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh |
+	TEST_OS=Darwin TEST_ARCH=arm64 VERSION=v0.1.0 INSTALL_DIR="$test_dir/documented-override" sh > "$test_dir/stdout"
+expect_binary documented-override "$test_dir/documented-override" darwin_arm64
 
 TEST_OS=Linux TEST_ARCH=x86_64 HOME="$test_dir/home" sh "$project_dir/install.sh" > "$test_dir/stdout"
 expect_binary latest "$test_dir/home/.local/bin" linux_amd64
