@@ -51,8 +51,9 @@ fallback.
 ## Wordlist, rolls, and entropy
 
 The embedded [EFF long Diceware wordlist](https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt)
-contains 7,776 unique words and their original five-die roll identifiers.
-Credit: Electronic Frontier Foundation. The bundled file's SHA-256 is
+comes from the [Electronic Frontier Foundation's Dice-Generated Passphrases guide](https://www.eff.org/dice).
+It contains 7,776 unique words and their original five-die roll identifiers.
+The bundled file's SHA-256 is
 `addd35536511597a02fa0a9ff1e5284677b8883b83e986e43f15a3db996b903e`.
 The library validates its size, word and roll uniqueness, and roll syntax at
 startup. No external wordlist file is needed at runtime.
@@ -61,10 +62,26 @@ A selected word's `Roll` is its existing five-digit list identifier, not an
 additional random draw or additional entropy. For wordlists without roll
 notation, `Roll` can be empty; custom wordlists are not supported in v0.1.
 
-For `N` independently and uniformly selected words from `W` unique entries,
-entropy is `N × log2(W)` bits. The EFF list contributes about 12.925 bits per
-word, or 77.5 bits for six words. These estimates require independent uniform
-selection and a secure random source. Treat generated passphrases and roll
-metadata as secrets; the library does not save or transmit them.
+Entropy measures how many possible outputs the generation process could have
+produced, not how complicated the resulting words look. For a wordlist of `W`
+unique entries, one uniformly selected word has `W` possibilities. Selecting
+`N` words independently **with replacement** gives `W^N` ordered passphrases;
+any particular sequence has probability `1 / W^N`. Therefore its entropy is
+`H = log2(W^N) = N × log2(W)` bits.
+
+For the EFF list, `W = 7,776 = 6^5`, so each word contributes
+`log2(7,776) ≈ 12.925` bits. Six words yield about 77.55 bits, displayed by
+the CLI as **77.5 bits**. Repeated words are valid: a sequence with repeats has
+the same probability as any other specific sequence. Word length, spelling,
+separators, and roll notation do not add choices, so they do not add entropy.
+
+This estimate assumes the list has unique words and that each selection is
+uniform, independent, and made with a cryptographically secure source. A weak
+or predictable injected reader invalidates the security interpretation of the
+number, even though the formula still describes the intended selection process.
+Entropy is not a guarantee about a particular account or threat: a disclosed
+or reused passphrase may be unsafe regardless of its calculated entropy. Treat
+generated passphrases and roll metadata as secrets; the library does not save
+or transmit them.
 
 Architectural decisions are documented in [adr/](adr/).

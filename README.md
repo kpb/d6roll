@@ -66,7 +66,9 @@ The CLI accepts 3–32 words. `--verbose` reports word count, entropy, a descrip
 
 ## Diceware and security
 
-The bundled [EFF long Diceware wordlist](https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt) has 7,776 words with five-digit roll identifiers. Credit: Electronic Frontier Foundation. Each displayed roll identifies its word; it adds no entropy. Six independently selected words have about 77.5 bits of entropy, assuming uniform selection with a secure random source. The CLI's labels are *Low* (<40 bits), *Moderate* (40–<60), *Strong* (60–<75), and *Very strong* (≥75). These are descriptive buckets, not security guarantees; the numeric estimate is authoritative. See the [library guide](doc/library.md) for the calculation and metadata details.
+The bundled [EFF long Diceware wordlist](https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt), from the [Electronic Frontier Foundation's Dice-Generated Passphrases guide](https://www.eff.org/dice), has 7,776 words with five-digit roll identifiers. Each uniformly selected word offers 7,776 possibilities, or about 12.9 bits of entropy. Six independent selections give `6 × log2(7,776) ≈ 77.5` bits. This counts the possible selections, not the words' length or appearance; separators and displayed roll identifiers add no entropy.
+
+The estimate assumes independent, uniform selection with a secure random source. The CLI's labels are *Low* (<40 bits), *Moderate* (40–<60), *Strong* (60–<75), and *Very strong* (≥75). They are descriptive, not security guarantees. See the [library guide](doc/library.md) for the calculation and assumptions in more detail.
 
 Treat passphrases and displayed rolls as secrets. Output in a terminal may remain in scrollback or captured logs; redirect deliberately. d6roll does not save or transmit passphrases. Architectural rationale is in [doc/adr/](doc/adr/). The repository license is [GPL-3.0](LICENSE).
 
