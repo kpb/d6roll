@@ -116,7 +116,7 @@ func TestHelpAndVersion(t *testing.T) {
 	}
 	for _, flag := range []string{"-V", "--version"} {
 		status, stdout, stderr := output([]string{flag}, nil)
-		if status != 0 || stdout != "d6roll 0.2.0\n" || stderr != "" {
+		if status != 0 || stdout != "d6roll 0.2.1\n" || stderr != "" {
 			t.Fatalf("version: status=%d stdout=%q stderr=%q", status, stdout, stderr)
 		}
 	}
