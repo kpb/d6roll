@@ -1,11 +1,15 @@
 package main
 
 import (
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
+	"math/big"
 	"os"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/kpb/d6roll"
 )
@@ -17,11 +21,15 @@ func main() {
 }
 
 func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Passphrase, error)) int {
+	return runWithRandom(args, stdout, stderr, generate, rand.Reader)
+}
+
+func runWithRandom(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Passphrase, error), random io.Reader) int {
 	flags := flag.NewFlagSet("d6roll", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	var count int
 	var separator string
-	var verbose, rolls, help, showVersion bool
+	var verbose, rolls, help, showVersion, memorable bool
 	flags.IntVar(&count, "w", 6, "number of words (3–32)")
 	flags.IntVar(&count, "words", 6, "number of words (3–32)")
 	flags.StringVar(&separator, "s", " ", "word separator")
@@ -29,6 +37,8 @@ func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Pas
 	flags.BoolVar(&verbose, "v", false, "show metadata on stderr")
 	flags.BoolVar(&verbose, "verbose", false, "show metadata on stderr")
 	flags.BoolVar(&rolls, "rolls", false, "show Diceware rolls and metadata on stderr")
+	flags.BoolVar(&memorable, "m", false, "format words as a memorable password")
+	flags.BoolVar(&memorable, "memorable", false, "format words as a memorable password")
 	flags.BoolVar(&help, "h", false, "show help")
 	flags.BoolVar(&help, "help", false, "show help")
 	flags.BoolVar(&showVersion, "V", false, "show version")
@@ -41,7 +51,8 @@ func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Pas
 		fmt.Fprintln(flags.Output(), "  -h, --help             show help")
 		fmt.Fprintln(flags.Output(), "  -V, --version          show version")
 		fmt.Fprintln(flags.Output(), "      --rolls            show Diceware rolls and metadata on stderr")
-		fmt.Fprintln(flags.Output(), "  -s, --separator string word separator (default \" \")")
+		fmt.Fprintln(flags.Output(), "  -m, --memorable        capitalize words, use dashes, add a digit and symbol")
+		fmt.Fprintln(flags.Output(), "  -s, --separator string word separator (default \" \"; memorable: \"-\")")
 		fmt.Fprintln(flags.Output(), "  -v, --verbose          show metadata on stderr")
 		fmt.Fprintln(flags.Output(), "  -w, --words int        number of words (3–32) (default 6)")
 	}
@@ -75,7 +86,42 @@ func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Pas
 		fmt.Fprintf(stderr, "d6roll: %v\n", err)
 		return 1
 	}
-	if _, err := fmt.Fprintln(stdout, strings.Join(phrase.Words(), separator)); err != nil {
+	words := phrase.Words()
+	if memorable {
+		separatorSet := false
+		flags.Visit(func(f *flag.Flag) {
+			if f.Name == "s" || f.Name == "separator" {
+				separatorSet = true
+			}
+		})
+		if !separatorSet {
+			separator = "-"
+		}
+		for i, word := range words {
+			if word != "" {
+				first, size := utf8.DecodeRuneInString(word)
+				words[i] = string(unicode.ToUpper(first)) + word[size:]
+			}
+		}
+		index, err := randomIndex(random, len(words))
+		if err != nil {
+			fmt.Fprintln(stderr, "d6roll: memorable formatting failed")
+			return 1
+		}
+		digit, err := randomIndex(random, 10)
+		if err != nil {
+			fmt.Fprintln(stderr, "d6roll: memorable formatting failed")
+			return 1
+		}
+		const symbols = "!@#$%^&*"
+		symbol, err := randomIndex(random, len(symbols))
+		if err != nil {
+			fmt.Fprintln(stderr, "d6roll: memorable formatting failed")
+			return 1
+		}
+		words[index] += fmt.Sprintf("%d%c", digit, symbols[symbol])
+	}
+	if _, err := fmt.Fprintln(stdout, strings.Join(words, separator)); err != nil {
 		fmt.Fprintf(stderr, "d6roll: write output: %v\n", err)
 		return 1
 	}
@@ -92,6 +138,14 @@ func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Pas
 			len(phrase.Selections), phrase.EntropyBits, strength(phrase.EntropyBits), phrase.Wordlist)
 	}
 	return 0
+}
+
+func randomIndex(random io.Reader, size int) (int, error) {
+	n, err := rand.Int(random, big.NewInt(int64(size)))
+	if err != nil {
+		return 0, err
+	}
+	return int(n.Int64()), nil
 }
 
 // Strength labels are descriptive display buckets, not security guarantees.

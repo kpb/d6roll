@@ -56,6 +56,7 @@ go build -o d6roll ./cmd/d6roll
 
 d6roll                       # six space-separated words; stdout only
 d6roll -w 8 -s -             # eight hyphen-separated words
+d6roll --memorable           # capitalized words with a digit and symbol
 d6roll --verbose             # passphrase on stdout, metadata on stderr
 d6roll --rolls               # roll table and metadata on stderr
 d6roll help                  # usage on stdout
@@ -65,6 +66,11 @@ d6roll --help
 The CLI accepts 3–32 words and separates words with spaces by default. Pass `-s -` or `--separator=-` for
 hyphen-separated output. `--verbose` reports word count, entropy, a descriptive strength label, and wordlist
 name. `--rolls` also reports the five-digit roll for each word.
+
+Use `-m` or `--memorable` for capitalized words joined by dashes, with a random digit and symbol appended to one
+randomly selected word (for example, `Maple-Orbit7!-Velvet-Cabin-Meadow-Quartz`). An explicitly supplied `--separator`
+overrides the dash. The digit and symbol are selected securely from `0`–`9` and `!@#$%^&*`. These formatting choices
+do not increase the reported entropy, which is based on the selected words.
 
 Redirecting stdout (for example, `d6roll --verbose > passphrase.txt`) captures only the passphrase. Errors go to stderr
 and exit nonzero.

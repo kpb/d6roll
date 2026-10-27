@@ -16,6 +16,92 @@ var sample = []d6roll.Selection{
 	{Word: "abiding", Roll: "11115"}, {Word: "ability", Roll: "11116"},
 }
 
+func TestMemorableFormatting(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		args   []string
+		random []byte
+		want   string
+	}{
+		{
+			name: "short alias",
+			args: []string{"-m"}, random: []byte{0, 0, 0},
+			want: "Abacus0!-Abdomen-Abdominal-Abide-Abiding-Ability\n",
+		},
+		{
+			name: "long alias",
+			args: []string{"--memorable"}, random: []byte{0, 0, 0},
+			want: "Abacus0!-Abdomen-Abdominal-Abide-Abiding-Ability\n",
+		},
+		{
+			name: "interior word",
+			args: []string{"-m"}, random: []byte{2, 4, 1},
+			want: "Abacus-Abdomen-Abdominal4@-Abide-Abiding-Ability\n",
+		},
+		{
+			name: "last word and maximum characters",
+			args: []string{"-m"}, random: []byte{5, 9, 7},
+			want: "Abacus-Abdomen-Abdominal-Abide-Abiding-Ability9*\n",
+		},
+		{
+			name: "rejected out-of-range draws",
+			// 7 is outside the six-word range; 15 is outside the digit range.
+			args: []string{"-m"}, random: []byte{7, 5, 15, 9, 7},
+			want: "Abacus-Abdomen-Abdominal-Abide-Abiding-Ability9*\n",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			status := runWithRandom(tc.args, &stdout, &stderr, fakeGenerate, bytes.NewReader(tc.random))
+			if status != 0 || stdout.String() != tc.want || stderr.Len() != 0 {
+				t.Fatalf("status=%d stdout=%q stderr=%q", status, stdout.String(), stderr.String())
+			}
+		})
+	}
+}
+
+func TestMemorableSeparatorOverrides(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"custom", []string{"--memorable", "--separator", "_"}, "Abacus0!_Abdomen_Abdominal\n"},
+		{"short space", []string{"-m", "-s", " "}, "Abacus0! Abdomen Abdominal\n"},
+		{"long space before preset", []string{"--separator= ", "--memorable"}, "Abacus0! Abdomen Abdominal\n"},
+		{"short empty before preset", []string{"-s", "", "-m"}, "Abacus0!AbdomenAbdominal\n"},
+		{"long empty", []string{"--memorable", "--separator="}, "Abacus0!AbdomenAbdominal\n"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			args := append([]string{"-w", "3"}, tc.args...)
+			status := runWithRandom(args, &stdout, &stderr, fakeGenerate, bytes.NewReader([]byte{0, 0, 0}))
+			if status != 0 || stdout.String() != tc.want || stderr.Len() != 0 {
+				t.Fatalf("status=%d stdout=%q stderr=%q", status, stdout.String(), stderr.String())
+			}
+		})
+	}
+}
+
+func TestMemorableRandomFailureDoesNotOutputPassword(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		random []byte
+	}{
+		{"word selection", nil},
+		{"digit selection", []byte{2}},
+		{"symbol selection", []byte{2, 4}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			status := runWithRandom([]string{"-m", "--verbose", "--rolls"}, &stdout, &stderr, fakeGenerate, bytes.NewReader(tc.random))
+			if status != 1 || stdout.Len() != 0 || stderr.String() != "d6roll: memorable formatting failed\n" {
+				t.Fatalf("status=%d stdout=%q stderr=%q", status, stdout.String(), stderr.String())
+			}
+		})
+	}
+}
+
 func fakeGenerate(n int) (d6roll.Passphrase, error) {
 	return d6roll.Passphrase{
 		Selections: sample[:n], EntropyBits: float64(n) * math.Log2(7776), Wordlist: "eff-large",
@@ -98,8 +184,8 @@ func TestHelpAndVersion(t *testing.T) {
 		t.Fatalf("help command: status=%d stdout=%q stderr=%q", status, stdout, stderr)
 	}
 	for _, want := range []string{
-		"-h, --help", "-V, --version", "--rolls", "-s, --separator string",
-		"-v, --verbose", "-w, --words int", `word separator (default " ")`,
+		"-h, --help", "-V, --version", "--rolls", "-m, --memorable", "-s, --separator string",
+		"-v, --verbose", "-w, --words int", `word separator (default " "; memorable: "-")`,
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("help missing %q: %q", want, stdout)
