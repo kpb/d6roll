@@ -94,8 +94,19 @@ func TestVerboseAndRollsAreOnlyOnStderr(t *testing.T) {
 
 func TestHelpAndVersion(t *testing.T) {
 	status, stdout, stderr := output([]string{"help"}, nil)
-	if status != 0 || stderr != "" || !strings.Contains(stdout, "Usage: d6roll") || !strings.Contains(stdout, "d6roll help") || !strings.Contains(stdout, "-words") || !strings.Contains(stdout, `word separator (default " ")`) {
+	if status != 0 || stderr != "" || !strings.Contains(stdout, "Usage: d6roll") || !strings.Contains(stdout, "d6roll help") {
 		t.Fatalf("help command: status=%d stdout=%q stderr=%q", status, stdout, stderr)
+	}
+	for _, want := range []string{
+		"-h, --help", "-V, --version", "--rolls", "-s, --separator string",
+		"-v, --verbose", "-w, --words int", `word separator (default " ")`,
+	} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("help missing %q: %q", want, stdout)
+		}
+	}
+	if strings.Contains(stdout, "\n  -verbose") || strings.Contains(stdout, "\n  -words") {
+		t.Fatalf("help showed non-POSIX long option spelling: %q", stdout)
 	}
 	for _, flag := range []string{"-h", "--help"} {
 		status, stdout, stderr := output([]string{flag}, nil)

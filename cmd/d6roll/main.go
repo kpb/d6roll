@@ -36,7 +36,14 @@ func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Pas
 	flags.Usage = func() {
 		fmt.Fprintln(flags.Output(), "Usage: d6roll [flags]")
 		fmt.Fprintln(flags.Output(), "       d6roll help")
-		flags.PrintDefaults()
+		fmt.Fprintln(flags.Output(), "")
+		fmt.Fprintln(flags.Output(), "Flags:")
+		fmt.Fprintln(flags.Output(), "  -h, --help             show help")
+		fmt.Fprintln(flags.Output(), "  -V, --version          show version")
+		fmt.Fprintln(flags.Output(), "      --rolls            show Diceware rolls and metadata on stderr")
+		fmt.Fprintln(flags.Output(), "  -s, --separator string word separator (default \" \")")
+		fmt.Fprintln(flags.Output(), "  -v, --verbose          show metadata on stderr")
+		fmt.Fprintln(flags.Output(), "  -w, --words int        number of words (3–32) (default 6)")
 	}
 	if len(args) == 1 && args[0] == "help" {
 		flags.SetOutput(stdout)
