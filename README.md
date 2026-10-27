@@ -27,7 +27,7 @@ either default:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh |
-  VERSION=v0.1.0 INSTALL_DIR="$HOME/bin" sh
+  VERSION=v0.2.0 INSTALL_DIR="$HOME/bin" sh
 ```
 
 Add the installation directory to your `PATH` if needed (use `$HOME/bin` instead
@@ -54,15 +54,15 @@ go install github.com/kpb/d6roll/cmd/d6roll@latest
 # Or from a checkout:
 go build -o d6roll ./cmd/d6roll
 
-d6roll                       # six words, hyphen-separated; stdout only
-d6roll -w 8 -s ' '          # eight space-separated words
+d6roll                       # six space-separated words; stdout only
+d6roll -w 8 -s -             # eight hyphen-separated words
 d6roll --verbose             # passphrase on stdout, metadata on stderr
 d6roll --rolls               # roll table and metadata on stderr
 d6roll help                  # usage on stdout
 d6roll --help
 ```
 
-The CLI accepts 3–32 words. `--verbose` reports word count, entropy, a descriptive strength label, and wordlist name. `--rolls` also reports the five-digit roll for each word. Redirecting stdout (for example, `d6roll --verbose > passphrase.txt`) captures only the passphrase. Errors go to stderr and exit nonzero.
+The CLI accepts 3–32 words and separates words with spaces by default. Pass `-s -` or `--separator=-` for hyphen-separated output; scripts that relied on the former hyphen default should pass `-s -`. `--verbose` reports word count, entropy, a descriptive strength label, and wordlist name. `--rolls` also reports the five-digit roll for each word. Redirecting stdout (for example, `d6roll --verbose > passphrase.txt`) captures only the passphrase. Errors go to stderr and exit nonzero.
 
 ## Diceware and security
 

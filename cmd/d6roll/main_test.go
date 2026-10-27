@@ -30,8 +30,17 @@ func output(args []string, generate func(int) (d6roll.Passphrase, error)) (int, 
 
 func TestDefaultOutput(t *testing.T) {
 	status, stdout, stderr := output(nil, fakeGenerate)
-	if status != 0 || stdout != "abacus-abdomen-abdominal-abide-abiding-ability\n" || stderr != "" {
+	if status != 0 || stdout != "abacus abdomen abdominal abide abiding ability\n" || stderr != "" {
 		t.Fatalf("status=%d stdout=%q stderr=%q", status, stdout, stderr)
+	}
+}
+
+func TestExplicitHyphenSeparator(t *testing.T) {
+	for _, args := range [][]string{{"-s", "-"}, {"--separator", "-"}} {
+		status, stdout, stderr := output(args, fakeGenerate)
+		if status != 0 || stdout != "abacus-abdomen-abdominal-abide-abiding-ability\n" || stderr != "" {
+			t.Fatalf("args=%q status=%d stdout=%q stderr=%q", args, status, stdout, stderr)
+		}
 	}
 }
 
@@ -57,7 +66,7 @@ func TestMaximumCLIWordCount(t *testing.T) {
 		}
 		return d6roll.Passphrase{Selections: selections}, nil
 	})
-	if status != 0 || len(strings.Split(strings.TrimSpace(stdout), "-")) != 32 || stderr != "" {
+	if status != 0 || len(strings.Split(strings.TrimSpace(stdout), " ")) != 32 || stderr != "" {
 		t.Fatalf("status=%d stdout=%q stderr=%q", status, stdout, stderr)
 	}
 }
@@ -65,7 +74,7 @@ func TestMaximumCLIWordCount(t *testing.T) {
 func TestVerboseAndRollsAreOnlyOnStderr(t *testing.T) {
 	for _, args := range [][]string{{"-v"}, {"--verbose"}, {"--rolls"}} {
 		status, stdout, stderr := output(args, fakeGenerate)
-		if status != 0 || stdout != "abacus-abdomen-abdominal-abide-abiding-ability\n" {
+		if status != 0 || stdout != "abacus abdomen abdominal abide abiding ability\n" {
 			t.Fatalf("args=%q status=%d stdout=%q", args, status, stdout)
 		}
 		for _, want := range []string{"Words:     6", "Entropy:   77.5 bits", "Strength:  Very strong", "Wordlist:  eff-large"} {
@@ -85,7 +94,7 @@ func TestVerboseAndRollsAreOnlyOnStderr(t *testing.T) {
 
 func TestHelpAndVersion(t *testing.T) {
 	status, stdout, stderr := output([]string{"help"}, nil)
-	if status != 0 || stderr != "" || !strings.Contains(stdout, "Usage: d6roll") || !strings.Contains(stdout, "d6roll help") || !strings.Contains(stdout, "-words") {
+	if status != 0 || stderr != "" || !strings.Contains(stdout, "Usage: d6roll") || !strings.Contains(stdout, "d6roll help") || !strings.Contains(stdout, "-words") || !strings.Contains(stdout, `word separator (default " ")`) {
 		t.Fatalf("help command: status=%d stdout=%q stderr=%q", status, stdout, stderr)
 	}
 	for _, flag := range []string{"-h", "--help"} {
@@ -96,7 +105,7 @@ func TestHelpAndVersion(t *testing.T) {
 	}
 	for _, flag := range []string{"-V", "--version"} {
 		status, stdout, stderr := output([]string{flag}, nil)
-		if status != 0 || stdout != "d6roll 0.1.0\n" || stderr != "" {
+		if status != 0 || stdout != "d6roll 0.2.0\n" || stderr != "" {
 			t.Fatalf("version: status=%d stdout=%q stderr=%q", status, stdout, stderr)
 		}
 	}

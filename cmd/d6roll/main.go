@@ -10,7 +10,7 @@ import (
 	"github.com/kpb/d6roll"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
 
 func main() {
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr, d6roll.Generate))
@@ -24,8 +24,8 @@ func run(args []string, stdout, stderr io.Writer, generate func(int) (d6roll.Pas
 	var verbose, rolls, help, showVersion bool
 	flags.IntVar(&count, "w", 6, "number of words (3–32)")
 	flags.IntVar(&count, "words", 6, "number of words (3–32)")
-	flags.StringVar(&separator, "s", "-", "word separator")
-	flags.StringVar(&separator, "separator", "-", "word separator")
+	flags.StringVar(&separator, "s", " ", "word separator")
+	flags.StringVar(&separator, "separator", " ", "word separator")
 	flags.BoolVar(&verbose, "v", false, "show metadata on stderr")
 	flags.BoolVar(&verbose, "verbose", false, "show metadata on stderr")
 	flags.BoolVar(&rolls, "rolls", false, "show Diceware rolls and metadata on stderr")
