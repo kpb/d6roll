@@ -13,6 +13,13 @@ d6roll is a small command-line utility for generating Diceware passphrases from 
 
 ## Install and use
 
+With [Homebrew](https://brew.sh/) on macOS (Intel or Apple Silicon) or Linux
+(amd64), install from the [kpb tap](https://github.com/kpb/homebrew-tap):
+
+```sh
+brew install kpb/tap/d6roll
+```
+
 On Linux (amd64) or macOS (amd64 or arm64), inspect [install.sh](install.sh)
 before running the installer:
 
