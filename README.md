@@ -35,7 +35,7 @@ override either default:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/kpb/d6roll/main/install.sh |
-  VERSION=v0.2.1 INSTALL_DIR="$HOME/bin" sh
+  VERSION=v0.3.0 INSTALL_DIR="$HOME/bin" sh
 ```
 
 Add the installation directory to your `PATH` if needed (use `$HOME/bin` instead when following the override example):

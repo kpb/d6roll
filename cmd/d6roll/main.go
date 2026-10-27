@@ -14,7 +14,7 @@ import (
 	"github.com/kpb/d6roll"
 )
 
-const version = "0.2.1"
+const version = "0.3.0"
 
 func main() {
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr, d6roll.Generate))
